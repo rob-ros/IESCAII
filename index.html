@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Inventario - Servicio Internacional de Equipos CA</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <img src="frkydepn3w.jpg" alt="IES Logo" class="company-logo">
+            
+            <div class="company-info">
+                <div class="company-name">INTERNATIONAL EQUIPMENT SERVICE, C.A.</div>
+                <div class="company-rif">RIF: J-29353024-5</div>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            <div id="loginAlert" class="alert alert-error hidden">
+                Credenciales incorrectas. Inténtalo nuevamente.
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="appContainer" class="app-container">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="header-logo">
+                        <img src="frkydepn3w.jpg" alt="IES Logo">
+                        <div class="header-title">Sistema de Inventario</div>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <i class="fas fa-user"></i>
+                            <span id="currentUser">Usuario</span>
+                            <span id="currentRole" class="text-secondary">(Rol)</span>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Salir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <nav class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </button>
+                <button class="nav-tab" onclick="showTab('equipment')">
+                    <i class="fas fa-cogs"></i>
+                    Equipos
+                </button>
+                <button class="nav-tab" onclick="showTab('reports')">
+                    <i class="fas fa-chart-bar"></i>
+                    Reportes
+                </button>
+                <button id="usersNavTab" class="nav-tab hidden" onclick="showTab('users')">
+                    <i class="fas fa-users"></i>
+                    Usuarios
+                </button>
+                <button id="sessionsNavTab" class="nav-tab hidden" onclick="showTab('sessions')">
+                    <i class="fas fa-history"></i>
+                    Sesiones
+                </button>
+            </nav>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboardTab" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Total de Equipos</div>
+                            <i class="fas fa-cogs" style="color: var(--primary-color);"></i>
+                        </div>
+                        <div class="stat-value" id="totalEquipment">0</div>
+                    </div>
+                    
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div class="stat-title">Disponibles</div>
+                            <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
+                        </div>
+                        <div class="stat-value" id="availableEquipment">0</div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div class="stat-title">En Uso</div>
+                            <i class="fas fa-clock" style="color: var(--warning-color);"></i>
+                        </div>
+                        <div class="stat-value" id="inUseEquipment">0</div>
+                    </div>
+                    
+                    <div class="stat-card danger">
+                        <div class="stat-header">
+                            <div class="stat-title">En Mantenimiento</div>
+                            <i class="fas fa-wrench" style="color: var(--danger-color);"></i>
+                        </div>
+                        <div class="stat-value" id="maintenanceEquipment">0</div>
+                    </div>
+                    
+                    <div class="stat-card" style="border-left-color: #6b7280;">
+                        <div class="stat-header">
+                            <div class="stat-title">Fuera de Servicio</div>
+                            <i class="fas fa-times-circle" style="color: #6b7280;"></i>
+                        </div>
+                        <div class="stat-value" id="outOfServiceEquipment">0</div>
+                    </div>
+                </div>
+
+                <h3>Equipos Recientes</h3>
+                <div id="recentEquipment" class="equipment-grid">
+                    <!-- Equipment cards will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Equipment Tab -->
+            <div id="equipmentTab" class="tab-content">
+                <!-- Equipment Form -->
+                <div id="equipmentForm" class="form-container hidden">
+                    <h3 id="formTitle">Nuevo Equipo</h3>
+                    <form id="equipForm">
+                        <input type="hidden" id="equipmentId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="equipmentName">Nombre del Equipo</label>
+                                <input type="text" id="equipmentName" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentCode">Código Interno</label>
+                                <input type="text" id="equipmentCode" required placeholder="MC-001">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentType">Tipo de Equipo</label>
+                                <select id="equipmentType" required>
+                                    <option value="">Seleccionar tipo</option>
+                                    <option value="montacargas-electrico">Montacargas Eléctrico</option>
+                                    <option value="montacargas-combustion">Montacargas Combustión</option>
+                                    <option value="apilador">Apilador</option>
+                                    <option value="transpaleta">Transpaleta</option>
+                                    <option value="grua-horquilla">Grúa Horquilla</option>
+                                    <option value="elevador-tijera">Elevador de Tijera</option>
+                                    <option value="cargador-frontal">Cargador Frontal</option>
+                                    <option value="equipo-auxiliar">Equipo Auxiliar</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentBrand">Marca</label>
+                                <input type="text" id="equipmentBrand" placeholder="Toyota, Caterpillar, etc.">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentModel">Modelo</label>
+                                <input type="text" id="equipmentModel" placeholder="8FGU25">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentSerial">Número de Serie</label>
+                                <input type="text" id="equipmentSerial" placeholder="123456789">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentCapacity">Capacidad de Carga (kg)</label>
+                                <input type="number" id="equipmentCapacity" step="1" placeholder="2500">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentHours">Horas de Uso</label>
+                                <input type="number" id="equipmentHours" step="1" placeholder="1250">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentStatus">Estado Operativo</label>
+                                <select id="equipmentStatus" required>
+                                    <option value="disponible">Disponible</option>
+                                    <option value="en-uso">En Operación</option>
+                                    <option value="mantenimiento">En Mantenimiento</option>
+                                    <option value="fuera-servicio">Fuera de Servicio</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="lastMaintenance">Último Mantenimiento</label>
+                                <input type="date" id="lastMaintenance">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="nextMaintenance">Próximo Mantenimiento</label>
+                                <input type="date" id="nextMaintenance">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="acquisitionDate">Fecha de Adquisición</label>
+                                <input type="date" id="acquisitionDate" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentValue">Valor de Adquisición ($)</label>
+                                <input type="number" id="equipmentValue" step="0.01" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="equipmentLocation">Ubicación Actual</label>
+                                <input type="text" id="equipmentLocation" required placeholder="Almacén A, Patio 2, etc.">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="equipmentDescription">Observaciones y Notas</label>
+                            <textarea id="equipmentDescription" rows="3" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px;" placeholder="Descripción técnica, observaciones de operación, historial de reparaciones..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i>
+                                Guardar
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="hideEquipmentForm()">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label for="searchEquipment">Buscar</label>
+                            <input type="text" id="searchEquipment" placeholder="Nombre, código o descripción..." onInput="filterEquipment()">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="filterType">Filtrar por Tipo</label>
+                            <select id="filterType" onchange="filterEquipment()">
+                                <option value="">Todos los tipos</option>
+                                <option value="montacargas-electrico">Montacargas Eléctrico</option>
+                                <option value="montacargas-combustion">Montacargas Combustión</option>
+                                <option value="apilador">Apilador</option>
+                                <option value="transpaleta">Transpaleta</option>
+                                <option value="grua-horquilla">Grúa Horquilla</option>
+                                <option value="elevador-tijera">Elevador de Tijera</option>
+                                <option value="cargador-frontal">Cargador Frontal</option>
+                                <option value="equipo-auxiliar">Equipo Auxiliar</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="filterStatus">Filtrar por Estado</label>
+                            <select id="filterStatus" onchange="filterEquipment()">
+                                <option value="">Todos los estados</option>
+                                <option value="disponible">Disponible</option>
+                                <option value="en-uso">En Operación</option>
+                                <option value="mantenimiento">En Mantenimiento</option>
+                                <option value="fuera-servicio">Fuera de Servicio</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <button id="addEquipmentBtn" class="btn btn-primary hidden" onclick="showEquipmentForm()">
+                                <i class="fas fa-plus"></i>
+                                Nuevo Equipo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="equipmentList" class="equipment-grid">
+                    <!-- Equipment list will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reportsTab" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Valor Total Inventario</div>
+                            <i class="fas fa-dollar-sign" style="color: var(--primary-color);"></i>
+                        </div>
+                        <div class="stat-value" id="totalValue">$0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Montacargas</div>
+                            <i class="fas fa-dolly" style="color: var(--primary-color);"></i>
+                        </div>
+                        <div class="stat-value" id="forklifts">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Equipos de Elevación</div>
+                            <i class="fas fa-arrows-alt-v" style="color: var(--primary-color);"></i>
+                        </div>
+                        <div class="stat-value" id="liftingEquipment">0</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-title">Equipos Auxiliares</div>
+                            <i class="fas fa-cogs" style="color: var(--primary-color);"></i>
+                        </div>
+                        <div class="stat-value" id="auxiliaryEquipment">0</div>
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <h3>Generar Reportes</h3>
+                    <div class="form-actions">
+                        <button class="btn btn-success" onclick="exportData('csv')">
+                            <i class="fas fa-file-csv"></i>
+                            Exportar CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="exportData('excel')">
+                            <i class="fas fa-file-excel"></i>
+                            Exportar Excel
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportData('json')">
+                            <i class="fas fa-file-code"></i>
+                            Exportar JSON
+                        </button>
+                        <button class="btn btn-warning" onclick="printReport()">
+                            <i class="fas fa-print"></i>
+                            Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab (Admin Only) -->
+            <div id="usersTab" class="tab-content">
+                <!-- User Form -->
+                <div id="userForm" class="form-container hidden">
+                    <h3 id="userFormTitle">Nuevo Usuario</h3>
+                    <form id="userCreateForm">
+                        <input type="hidden" id="userId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="userFullName">Nombre Completo</label>
+                                <input type="text" id="userFullName" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="userEmail">Correo Electrónico</label>
+                                <input type="email" id="userEmail" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="userUsername">Usuario</label>
+                                <input type="text" id="userUsername" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="userPassword">Contraseña</label>
+                                <input type="password" id="userPassword" required minlength="6">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="userRole">Rol</label>
+                                <select id="userRole" required>
+                                    <option value="">Seleccionar rol</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="user">Usuario Regular</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="userStatus">Estado</label>
+                                <select id="userStatus" required>
+                                    <option value="active">Activo</option>
+                                    <option value="inactive">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i>
+                                Guardar Usuario
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="hideUserForm()">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- User Management Controls -->
+                <div class="form-container">
+                    <div class="stat-header" style="margin-bottom: 20px;">
+                        <h3>Gestión de Usuarios</h3>
+                        <button class="btn btn-primary" onclick="showUserForm()">
+                            <i class="fas fa-user-plus"></i>
+                            Nuevo Usuario
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="searchUsers">Buscar Usuario</label>
+                        <input type="text" id="searchUsers" placeholder="Nombre, usuario o email..." onInput="filterUsers()">
+                    </div>
+                </div>
+
+                <!-- Users List -->
+                <div id="usersList" class="equipment-grid">
+                    <!-- Users will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Sessions Tab (Admin Only) -->
+            <div id="sessionsTab" class="tab-content">
+                <!-- Session Filters -->
+                <div class="form-container">
+                    <div class="stat-header" style="margin-bottom: 20px;">
+                        <h3>Historial de Sesiones de Usuario</h3>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn btn-secondary" onclick="exportSessionsCSV()">
+                                <i class="fas fa-download"></i>
+                                Exportar CSV
+                            </button>
+                            <button class="btn btn-primary" onclick="refreshSessions()">
+                                <i class="fas fa-sync-alt"></i>
+                                Actualizar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Statistics Cards -->
+                    <div class="stats-grid" style="margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Sesiones Activas</div>
+                                <i class="fas fa-users" style="color: var(--success-color);"></i>
+                            </div>
+                            <div class="stat-value" id="activeSessions">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Sesiones Hoy</div>
+                                <i class="fas fa-calendar-day" style="color: var(--primary-color);"></i>
+                            </div>
+                            <div class="stat-value" id="sessionsToday">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Tiempo Promedio</div>
+                                <i class="fas fa-clock" style="color: var(--secondary-color);"></i>
+                            </div>
+                            <div class="stat-value" id="avgSessionTime">0 min</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">Usuarios Únicos Hoy</div>
+                                <i class="fas fa-user-check" style="color: var(--warning-color);"></i>
+                            </div>
+                            <div class="stat-value" id="uniqueUsersToday">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label for="searchSessions">Buscar Usuario</label>
+                            <input type="text" id="searchSessions" placeholder="Nombre o usuario..." onInput="filterSessions()">
+                        </div>
+                        <div class="form-group">
+                            <label for="filterDateFrom">Desde</label>
+                            <input type="date" id="filterDateFrom" onChange="filterSessions()">
+                        </div>
+                        <div class="form-group">
+                            <label for="filterDateTo">Hasta</label>
+                            <input type="date" id="filterDateTo" onChange="filterSessions()">
+                        </div>
+                        <div class="form-group">
+                            <label for="filterSessionStatus">Estado</label>
+                            <select id="filterSessionStatus" onChange="filterSessions()">
+                                <option value="">Todas las sesiones</option>
+                                <option value="active">Solo activas</option>
+                                <option value="closed">Solo cerradas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sessions List -->
+                <div id="sessionsList" class="equipment-grid">
+                    <!-- Sessions will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js" defer></script>
+        
+</body>
+</html>
